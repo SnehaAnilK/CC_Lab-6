@@ -4,8 +4,9 @@ pipeline {
         stage('Build Backend Image') {
             steps {
                 sh '''
+                # Changed path from CC_LAB-6/backend to .
                 docker rmi -f backend-app || true
-                docker build -t backend-app CC_LAB-6/backend
+                docker build -t backend-app .
                 '''
             }
         }
@@ -16,6 +17,8 @@ pipeline {
                 docker rm -f backend1 backend2 || true
                 docker run -d --name backend1 --network app-network backend-app
                 docker run -d --name backend2 --network app-network backend-app
+                # Added delay to ensure backends are up before NGINX tries to find them
+                sleep 3
                 '''
             }
         }
@@ -30,7 +33,11 @@ pipeline {
                   -p 80:80 \
                   nginx
                 
-                docker cp CC_LAB-6/nginx/default.conf nginx-lb:/etc/nginx/conf.d/default.conf
+                # Added delay to ensure NGINX container is ready for config copy
+                sleep 2
+
+                # Changed path from CC_LAB-6/nginx/default.conf to default.conf
+                docker cp default.conf nginx-lb:/etc/nginx/conf.d/default.conf
                 docker exec nginx-lb nginx -s reload
                 '''
             }
